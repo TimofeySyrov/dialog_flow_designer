@@ -11,7 +11,7 @@ import { GNode, Graph, XY } from "../types";
 /**
  * Gap between columns (**X axis**)
  */
-export const columnGap = 100;
+export const columnGap = 200;
 /**
  * Gap between rows (**Y axis**)
  */
@@ -148,7 +148,8 @@ export const getLayout = (graph: Graph) => {
     Math.max(
       sortByVertIdx(children).reduce((heightUpToThisChild, childId) => {
         const prevChildY = nodeAboveY + heightUpToThisChild;
-        return heightUpToThisChild + computePosition(childId, prevChildY, depth) + rowGap;
+        const childIsCondition = nodeMap.get(childId)?.turn === 0;
+        return heightUpToThisChild + computePosition(childId, prevChildY, childIsCondition ? depth-1 : depth) + rowGap;
       }, 0) - rowGap,
       0
     );

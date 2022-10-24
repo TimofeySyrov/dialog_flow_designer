@@ -8,7 +8,8 @@ import shallow from "zustand/shallow";
 import pick from "../utils/pick";
 import { columnGap, rowGap, useLayout } from "../utils/layout";
 import useResizeObserver from "use-resize-observer";
-import { nodeHeight, nodeWidth } from "./Node";
+import { getNodePositionByBlock, useGraphBlocks } from "../utils/graphBlocks";
+import Block, { blockHeight, blockWidth } from "./Block";
 
 const scrollSpeedModifier = 0.5;
 const maxZoom = 1;
@@ -32,6 +33,7 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
   );
   const graph = useGraph();
   const nodeLayoutPositions = useLayout(graph);
+  const graphBlocks = useGraphBlocks(graph);
   const canvasRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -138,17 +140,17 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           transform: Rematrix.toString(viewTransform),
         }}
       >
-        {graph.nodes.map((node) => {
-          const pos = nodeLayoutPositions[node.id];
-          const width = nodeWidth + columnGap + 6;
-          const height = nodeHeight + rowGap + 6;
+        {graphBlocks.map(({response}) => {
+          const pos = nodeLayoutPositions[response.id];
+          const width = blockWidth + columnGap + 6;
+          const height = blockHeight + rowGap + 6;
           return (
             <div
-              key={"bg" + node.id}
+              key={"bg" + response.id}
               className="absolute pointer-events-none"
               style={{
                 transform: `translate(${pos.x - columnGap / 2 - 3}px, ${pos.y - rowGap / 2 - 3}px)`,
-                background: `${colorFlow(node.flow)}`,
+                background: `${colorFlow(response.flow)}`,
                 width,
                 height,
                 zIndex: -2,
@@ -168,14 +170,31 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
             <Edge
               key={e.fromId + e.toId}
               edge={e}
-              fromLayoutPos={nodeLayoutPositions[e.fromId]}
-              toLayoutPos={nodeLayoutPositions[e.toId]}
+              fromLayoutPos={getNodePositionByBlock({
+                id: e.fromId,
+                graph,
+                layoutPositions: nodeLayoutPositions,
+                graphBlocks,
+              })}
+              toLayoutPos={getNodePositionByBlock({
+                id: e.toId,
+                graph,
+                layoutPositions: nodeLayoutPositions,
+                graphBlocks,
+              })}
             />
           ))}
         </svg>
-        {graph.nodes.map((node) => (
-          <CanvasNode key={node.id} node={node} layoutPos={nodeLayoutPositions[node.id]} />
+        {graphBlocks.map((block) => (
+          <Block
+            key={block.response.id}
+            block={block}
+            layoutPos={nodeLayoutPositions[block.response.id]}
+          />
         ))}
+        {/* {graph.nodes.map((node) => (
+          <CanvasNode key={node.id} node={node} layoutPos={nodeLayoutPositions[node.id]} />
+        ))} */}
       </div>
     </div>
   );

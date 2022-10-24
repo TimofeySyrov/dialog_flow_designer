@@ -3,8 +3,8 @@ import { FC } from "react";
 import { GNode, Turn } from "../types";
 import IconAddFilled from "~icons/carbon/add-filled";
 
-export const nodeWidth = 160;
-export const nodeHeight = 69;
+export const nodeWidth = 262;
+export const nodeHeight = 24;
 
 /**
  * Purely representational node component.
@@ -17,13 +17,20 @@ const Node: FC<{
 }> = ({ node: { label, flow, turn }, starter = false, selected, onClickAdd }) => (
   <div
     className={cn(
-      "group relative p-5 w-40",
-      "rounded border-t-5",
-      "bg-white text-center text-black",
+      "group relative",
+      "rounded border-l-4",
+      "bg-white text-black",
       "select-none",
       starter ? "border-red-500" : turn === Turn.BOT ? "border-blue-500" : "border-yellow-500",
       selected && "ring ring-blue-500"
     )}
+    style={{
+      width: nodeWidth,
+      height: nodeHeight,
+      padding: "4px",
+      fontSize: "13px",
+      fontWeight: "600",
+    }}
   >
     {label}
 
