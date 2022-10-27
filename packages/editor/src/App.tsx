@@ -1,9 +1,10 @@
 import Canvas from "./canvas/Canvas";
+import Graph from "./components/Graph/Graph";
 import { useEditorMessages } from "./store";
 
 function App() {
   // Connect store to backend
-  useEditorMessages();
+  // useEditorMessages();
 
   return (
     <div className="flex flex-col h-full">
@@ -17,7 +18,9 @@ function App() {
         )}
       </div> */}
 
-      <Canvas />
+      {/* <Canvas /> */}
+
+      <Graph />
     </div>
   );
 }
