@@ -5,6 +5,7 @@
   "scripts": {
     "preinstall": "node scripts/install.mjs",
     "dev:vsc": "concurrently \"cd packages/editor && npm run dev:vsc\" \"cd packages/extension && npm run dev\" -n editor,extension -c",
+    "dev:web": "cd packages/editor && npm run dev:web",
     "storybook": "cd packages/editor && npm -s run storybook",
     "build:vsix": "node scripts/buildExtension.mjs"
   },
