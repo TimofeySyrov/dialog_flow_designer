@@ -1,17 +1,26 @@
-import { FC, useEffect, useRef } from "react";
+import { FC } from "react";
 import shallow from "zustand/shallow";
 import { hoverEdge, useStore } from "../store";
 import { GEdge, XY } from "../types";
 import pick from "../utils/pick";
-import { nodeHeight, nodeWidth } from "./Node";
 
 const c = 30;
 
-const getPathD = (fromPos: XY, toPos: XY) => {
-  const fromX = fromPos.x + nodeWidth;
-  const fromY = fromPos.y + nodeHeight / 2;
-  const toX = toPos.x;
-  const toY = toPos.y + nodeHeight / 2;
+export interface EdgeSubPathD extends XY {
+  width: number;
+  height: number;
+}
+
+export interface EdgePathD {
+  from: EdgeSubPathD;
+  to: EdgeSubPathD;
+}
+
+export const getPathD = ({ from, to }: EdgePathD) => {
+  const fromX = from.x + from.width;
+  const fromY = from.y + from.height / 2;
+  const toX = to.x;
+  const toY = to.y + to.height / 2;
   const backlink = fromX > toX;
   const curve = backlink
     ? `h ${c} C ${fromX} ${fromY + c * 3}, ${toX} ${toY + c * 3}, ${toX - c} ${toY} h ${c}`
@@ -20,10 +29,9 @@ const getPathD = (fromPos: XY, toPos: XY) => {
   return d;
 };
 
-const Edge: FC<{ edge: GEdge; fromLayoutPos: XY; toLayoutPos: XY }> = ({
+const Edge: FC<{ edge: GEdge; pathPoints: EdgePathD }> = ({
   edge: { fromId, toId },
-  fromLayoutPos,
-  toLayoutPos,
+  pathPoints,
 }) => {
   const { highlightedEdges } = useStore(pick("highlightedEdges"), shallow);
   const highlighted = highlightedEdges.has(`${fromId}-${toId}`);
@@ -55,19 +63,21 @@ const Edge: FC<{ edge: GEdge; fromLayoutPos: XY; toLayoutPos: XY }> = ({
     <>
       {/* Invisible wide path for easier hovering */}
       <path
+        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")}`}
         style={{
           fill: "transparent",
           stroke: "transparent",
           strokeWidth: "20",
           pointerEvents: "stroke",
         }}
-        d={getPathD(fromLayoutPos, toLayoutPos)}
+        d={getPathD(pathPoints)}
         onMouseEnter={() => hoverEdge(fromId, toId)}
         onMouseLeave={() => hoverEdge(null)}
       />
 
       {/* Actual visible path */}
       <path
+        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")}`}
         style={{
           fill: "transparent",
           stroke: highlighted ? "rgba(52, 211, 153)" : "grey",
@@ -75,7 +85,7 @@ const Edge: FC<{ edge: GEdge; fromLayoutPos: XY; toLayoutPos: XY }> = ({
           shapeRendering: "geometricPrecision",
           pointerEvents: "none",
         }}
-        d={getPathD(fromLayoutPos, toLayoutPos)}
+        d={getPathD(pathPoints)}
       />
     </>
   );

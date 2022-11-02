@@ -18,12 +18,12 @@ const Block: FC<{
 
   return (
     <div
-      className={cn("absolute")}
+      className={cn("absolute") + ` block-${response.id.split("#").join("")}`}
       style={{
         width: `${blockWidth}px`,
         borderRadius: "10px",
         backgroundColor: "white",
-        padding: "4px",
+        padding: "8px 6px 0px 6px",
         transform: `translate(${layoutX}px, ${layoutY}px)`,
       }}
     >
@@ -39,6 +39,8 @@ const Block: FC<{
             throw new Error("Function not implemented.");
           }}
         />
+
+        <span style={{ fontSize: 14, color: "#8D96B5" }}>Sample text</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", rowGap: "4px" }}>
         {hasConditions &&
@@ -52,6 +54,18 @@ const Block: FC<{
               }}
             />
           ))}
+      </div>
+
+      <div
+        style={{
+          fontSize: "10px",
+          color: "#8D96B5",
+          width: "100%",
+          textAlign: "center",
+          marginTop: "8px",
+        }}
+      >
+        show suggestions
       </div>
     </div>
   );

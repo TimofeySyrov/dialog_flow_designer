@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { nodeHeight, nodeWidth } from "../canvas/Node";
+
 import { GNode, Graph, XY } from "../types";
 
 // This is a basic (kinda hacky, but functional) layout algo. Might need serious rework.
@@ -43,7 +43,12 @@ const F = 0.01;
  */
 const maxIter = 100;
 
-export const getLayout = (graph: Graph) => {
+export interface BSizes {
+  height: number;
+  width: number;
+}
+
+export const getLayout = (graph: Graph, sizes: Map<string, BSizes>) => {
   const { nodes, edges } = graph;
 
   /**
@@ -149,7 +154,11 @@ export const getLayout = (graph: Graph) => {
       sortByVertIdx(children).reduce((heightUpToThisChild, childId) => {
         const prevChildY = nodeAboveY + heightUpToThisChild;
         const childIsCondition = nodeMap.get(childId)?.turn === 0;
-        return heightUpToThisChild + computePosition(childId, prevChildY, childIsCondition ? depth-1 : depth) + rowGap;
+        return (
+          heightUpToThisChild +
+          computePosition(childId, prevChildY, childIsCondition ? depth - 1 : depth) +
+          rowGap
+        );
       }, 0) - rowGap,
       0
     );
@@ -164,10 +173,12 @@ export const getLayout = (graph: Graph) => {
     visitedNodes.add(id);
     const children = childMap.get(id) ?? [];
     const childrenHeight = getChildrenHeight(children, nodeAboveY, depth + 1);
-    const x = depth * (nodeWidth + columnGap);
-    const y = nodeAboveY + rowGap + Math.max(childrenHeight / 2 - nodeHeight / 2, 0);
+    const { width, height } = sizes.get(id) || { width: 0, height: 0 };
+
+    const x = depth * (width + columnGap);
+    const y = nodeAboveY + rowGap + Math.max(childrenHeight / 2 - height / 2, 0);
     positions[id] = { x, y };
-    return Math.max(nodeHeight, childrenHeight);
+    return Math.max(height, childrenHeight);
   };
 
   getChildrenHeight(firstColumn, 0);
@@ -175,4 +186,5 @@ export const getLayout = (graph: Graph) => {
   return positions;
 };
 
-export const useLayout = (graph: Graph) => useMemo(() => getLayout(graph), [graph]);
+export const useLayout = (graph: Graph, sizes: Map<string, BSizes>) =>
+  useMemo(() => getLayout(graph, sizes), [graph, sizes]);

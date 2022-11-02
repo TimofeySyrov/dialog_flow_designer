@@ -4,9 +4,9 @@ import { useEffect } from "react";
 export type EditorMessage = Partial<EditorState>;
 export type MsgSub = (msg: { data: EditorMessage }) => void;
 
-let _postMessage: (msg: any) => void;
-let _addMsgSub: (sub: MsgSub) => void;
-let _removeMsgSub: (sub: MsgSub) => void;
+let _postMessage = (msg: any) => {};
+let _addMsgSub = (sub: MsgSub) => {};
+let _removeMsgSub = (sub: MsgSub) => {};
 if ("acquireVsCodeApi" in window) {
   _postMessage = window.acquireVsCodeApi().postMessage;
   _addMsgSub = (sub) => window.addEventListener("message", sub);
