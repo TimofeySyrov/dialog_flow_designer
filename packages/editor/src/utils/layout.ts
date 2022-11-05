@@ -11,7 +11,7 @@ import { GNode, Graph, XY } from "../types";
 /**
  * Gap between columns (**X axis**)
  */
-export const columnGap = 200;
+export const columnGap = 40;
 /**
  * Gap between rows (**Y axis**)
  */

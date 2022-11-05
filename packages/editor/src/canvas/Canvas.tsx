@@ -19,6 +19,11 @@ const scrollSpeedModifier = 0.5;
 const maxZoom = 1;
 const minZoom = 0.1;
 
+const hex2rgba = (hex: string, alpha = 1) => {
+  const [r, g, b] = hex.match(/\w\w/g)!.map((x) => parseInt(x, 16));
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
 // This coloring was added last-minute for demo purposes
 // It should be replaced by something more robust
 const colors = ["#e9a7a1", "#ecbaa2", "#edd9a3", "#a2e2b0", "#b1c8ed", "#b3abdf", "#edc2d5"];
@@ -30,15 +35,17 @@ const colorFlow = (flowName: string) => {
   return colorMap.get(flowName);
 };
 
+useStore.setState({
+  graph: plotToGraph(bookPlot),
+});
+
 const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) => {
-  useStore.setState({
-    // viewTransform: Rematrix.multiply(Rematrix.scale(0.4), Rematrix.translate(300, 50)),
-    graph: plotToGraph(bookPlot),
-  });
   const { viewTransform, viewportJumping } = useStore(
     pick("viewTransform", "viewportJumping"),
     shallow
   );
+
+  // console.log("updated");
 
   const graph = useGraph();
   const graphBlocks = useGraphBlocks(graph);
@@ -67,17 +74,22 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
 
     graph.edges.forEach((e) => updateEdgePosition(e));
 
-    // const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(true);
-    // const handleKeyUp = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(false);
-    // const preventZoom = (ev: MouseEvent) => ev.preventDefault();
-    // window.addEventListener("keydown", handleKeyDown);
-    // window.addEventListener("keyup", handleKeyUp);
-    // window.addEventListener("wheel", preventZoom, { passive: false });
-    // return () => {
-    //   window.removeEventListener("keydown", handleKeyDown);
-    //   window.removeEventListener("keyup", handleKeyUp);
-    //   window.removeEventListener("wheel", preventZoom);
-    // };
+    // Update matrix after updating all of positions
+    useStore.setState({
+      viewTransform: Rematrix.multiply(Rematrix.scale(0.25), Rematrix.translate(300, 50)),
+    });
+
+    const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(true);
+    const handleKeyUp = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(false);
+    const preventZoom = (ev: MouseEvent) => ev.preventDefault();
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("wheel", preventZoom, { passive: false });
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("wheel", preventZoom);
+    };
   }, []);
 
   const getBlockSizes = () => {
@@ -225,11 +237,11 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
       ref={canvasRef}
       className="h-full bg-neutral-200 w-full overflow-hidden"
       style={{ cursor: ctrlHeld ? "move" : "default" }}
-      // onMouseDown={handleMouseDown}
-      // onMouseUp={handleMouseUp}
-      // onMouseMove={handleMouseMove}
-      // onMouseEnter={handleMouseEnter}
-      // onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onWheel={handleWheel}
     >
       <div
         ref={viewportRef}
@@ -254,7 +266,9 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
               }
               style={{
                 transform: `translate(${pos.x - columnGap / 2 - 3}px, ${pos.y - rowGap / 2 - 3}px)`,
-                background: `${colorFlow(response.flow)}`,
+                background: `${colorFlow(response.flow) && hex2rgba(colorFlow(response.flow)!, 0.3)}`,
+                border: `3px solid ${colorFlow(response.flow)}`,
+                borderRadius: "18px",
                 width,
                 height,
                 zIndex: -2,
