@@ -1,0 +1,149 @@
+.node {
+  position: relative;
+  min-height: 21px;
+  padding: 4px 6px;
+  background-color: #fff;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 17px;
+  letter-spacing: 0.04em;
+  color: #000000e5;
+  border: 2px solid transparent;
+
+  &:hover {
+    background-color: #ff95001a;
+  }
+
+  &:active {
+    border-color: #ff9500;
+  }
+
+  &_type_response:hover {
+    background-color: #3399cc1a;
+  }
+
+  &_type_response:active {
+    border-color: #3399cc;
+  }
+
+  &_type_response {
+    display: flex;
+    flex-direction: column;
+    row-gap: 8px;
+    border-radius: 12px 12px 0px 0px;
+    border-bottom-color: #3300ff1a;
+    padding: 8px 6px;
+  }
+
+  &_type_starter:hover {
+    background-color: #00cc991a;
+  }
+
+  &_type_starter:active {
+    border-color: #00cc99;
+  }
+
+  &__container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    column-gap: 6px;
+  }
+
+  &_type_starter &__container {
+    align-items: center;
+  }
+
+  &__name {
+    word-break: break-all;
+  }
+
+  &_type_response > &__container > &__name {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__desc {
+    color: #8d96b5;
+  }
+
+  &__marker {
+    width: 4px;
+    border-radius: 2px;
+    background-color: #ff9500;
+  }
+
+  &_type_response &__marker {
+    background-color: #3399cc;
+  }
+
+  &_type_starter &__marker {
+    background-color: transparent;
+    width: fit-content;
+    height: 100%;
+  }
+
+  &__priority {
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 13px;
+    color: #8d96b5;
+    align-self: center;
+  }
+
+  &__func-icon {
+    color: #8d96b5;
+  }
+
+  &__add-transition-btn {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border: 3px solid #8d96b5;
+    border-radius: 50%;
+    display: none;
+
+    &::after {
+      content: "+";
+      position: absolute;
+      font-size: 20px;
+      font-weight: 900;
+      color: #8d96b5;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      display: none;
+    }
+
+    &:hover,
+    &:active {
+      width: 24px;
+      height: 24px;
+      background: #f9fafc;
+      border: 1.5px solid #8d96b5;
+
+      &::after {
+        display: block;
+      }
+    }
+
+    &_child {
+      top: 100%;
+      right: 50%;
+      z-index: 1;
+    }
+  }
+
+  &:hover > &__add-transition-btn,
+  &:active > &__add-transition-btn {
+    display: block;
+  }
+
+  &__fallback {
+  }
+}

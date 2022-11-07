@@ -1,4 +1,4 @@
-import Canvas from "./canvas/Canvas";
+import Canvas from "./components/Canvas/Canvas";
 import { useEditorMessages } from "./store";
 
 function App() {

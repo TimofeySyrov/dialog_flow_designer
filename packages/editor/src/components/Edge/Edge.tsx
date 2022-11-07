@@ -1,8 +1,11 @@
 import { FC } from "react";
 import shallow from "zustand/shallow";
-import { hoverEdge, useStore } from "../store";
-import { GEdge, XY } from "../types";
-import pick from "../utils/pick";
+
+import pick from "../../utils/helpers/pick";
+import { hoverEdge, useStore } from "../../store";
+import { GEdge, XY } from "../../types";
+
+import styles from "./edge.module.scss";
 
 const c = 30;
 
@@ -63,13 +66,7 @@ const Edge: FC<{ edge: GEdge; pathPoints: EdgePathD }> = ({
     <>
       {/* Invisible wide path for easier hovering */}
       <path
-        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")}`}
-        style={{
-          fill: "transparent",
-          stroke: "transparent",
-          strokeWidth: "20",
-          pointerEvents: "stroke",
-        }}
+        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")} ${styles.edge}`}
         d={getPathD(pathPoints)}
         onMouseEnter={() => hoverEdge(fromId, toId)}
         onMouseLeave={() => hoverEdge(null)}

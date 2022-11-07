@@ -4,16 +4,18 @@ import cn from "classnames";
 import shallow from "zustand/shallow";
 import useResizeObserver from "use-resize-observer";
 
-import bookPlot from "../__mocks__/mockPlotWithFlows";
-import useStore, { applyViewTransforms, endJump, useGraph } from "../store";
-import pick from "../utils/pick";
-import { BSizes, columnGap, getLayout, rowGap, useLayout } from "../utils/layout";
-import { useGraphBlocks } from "../utils/graphBlocks";
-import { plotToGraph } from "../utils/plot";
-import { GEdge, XY } from "../types";
+import bookPlot from "../../__mocks__/mockPlotWithFlows";
+import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
+import pick from "../../utils/helpers/pick";
+import { BSizes, columnGap, getLayout, rowGap, useLayout } from "../../utils/helpers/layout";
+import { useGraphBlocks } from "../../utils/helpers/graphBlocks";
+import { plotToGraph } from "../../utils/helpers/plot";
+import { GEdge, XY } from "../../types";
 
-import Edge, { getPathD } from "./Edge";
-import Block, { blockHeight, blockWidth } from "./Block";
+import Edge, { getPathD } from "../Edge/Edge";
+import Block from "../Block/Block";
+
+import styles from "./canvas.module.scss";
 
 const scrollSpeedModifier = 0.5;
 const maxZoom = 1;
@@ -256,8 +258,8 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
       >
         {graphBlocks.map(({ response }) => {
           const pos = { x: 0, y: 0 };
-          const width = blockWidth + columnGap + 6;
-          const height = blockHeight + rowGap + 6;
+          const width = columnGap + 6; //blockWidth +
+          const height = rowGap + 6; //blockHeight +
           return (
             <div
               key={"bg" + response.id}
@@ -266,7 +268,9 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
               }
               style={{
                 transform: `translate(${pos.x - columnGap / 2 - 3}px, ${pos.y - rowGap / 2 - 3}px)`,
-                background: `${colorFlow(response.flow) && hex2rgba(colorFlow(response.flow)!, 0.3)}`,
+                background: `${
+                  colorFlow(response.flow) && hex2rgba(colorFlow(response.flow)!, 0.3)
+                }`,
                 border: `3px solid ${colorFlow(response.flow)}`,
                 borderRadius: "18px",
                 width,
@@ -307,8 +311,13 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
             );
           })}
         </svg>
-        {graphBlocks.map((block) => (
-          <Block key={block.response.id} block={block} layoutPos={{ x: 0, y: 0 }} />
+        {graphBlocks.map((block, index) => (
+          <Block
+            key={block.response.id}
+            starter={block.response.label === "start"}
+            block={block}
+            layoutPos={{ x: 0, y: 0 }}
+          />
         ))}
         {/* {graph.nodes.map((node) => (
           <CanvasNode key={node.id} node={node} layoutPos={nodeLayoutPositions[node.id]} />

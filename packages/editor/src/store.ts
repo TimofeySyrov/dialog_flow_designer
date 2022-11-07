@@ -2,13 +2,13 @@ import produce from "immer";
 import create from "zustand";
 import { Plot } from "@dialog-flow-designer/shared-types/df-parser-server";
 import { GEdge, GNode, Graph, Mode, Size, Turn, XY } from "./types";
-import { plotToGraph } from "./utils/plot";
+import { plotToGraph } from "./utils/helpers/plot";
 import { MsgSub, sendMessage, useMessages } from "./messaging";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { nanoid } from "nanoid";
 import * as Rematrix from "rematrix";
 import shallow from "zustand/shallow";
-import pick from "./utils/pick";
+import pick from "./utils/helpers/pick";
 
 /**
  * Global store state type

@@ -1,9 +1,15 @@
 import cn from "classnames";
 import { FC } from "react";
 import shallow from "zustand/shallow";
-import useStore, { selectNode, setMode, hoverNode, addTransToStaging, centerPoint } from "../store";
-import { GNode, Mode, Turn, XY } from "../types";
-import pick from "../utils/pick";
+import useStore, {
+  selectNode,
+  setMode,
+  hoverNode,
+  addTransToStaging,
+  centerPoint,
+} from "../../store";
+import { GNode, Mode, Turn, XY } from "../../types";
+import pick from "../../utils/pick";
 import Node, { nodeHeight, nodeWidth } from "./Node";
 
 /**

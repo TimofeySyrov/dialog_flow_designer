@@ -1,0 +1,19 @@
+.block {
+  width: 272px;
+  position: absolute;
+  border-radius: 12px;
+  background-color: #fff;
+
+  &__conditions {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__suggestions-btn {
+    font-size: 10px;
+    color: #8D96B5;
+    width: 100%;
+    text-align: center;
+    margin-top: 8px;
+  }
+}
