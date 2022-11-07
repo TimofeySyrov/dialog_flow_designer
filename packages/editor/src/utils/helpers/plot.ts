@@ -1,4 +1,4 @@
-import { Graph, GNode, Turn, GEdge } from "../types";
+import { Graph, GNode, Turn, GEdge } from "../../types";
 import { Plot } from "@dialog-flow-designer/shared-types/df-parser-server";
 
 /**
