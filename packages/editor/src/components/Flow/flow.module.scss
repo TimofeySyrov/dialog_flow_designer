@@ -1,0 +1,51 @@
+@import "../../utils/styles/vars";
+@import "../../utils/styles/colors";
+@import "../../utils/styles/typography";
+
+.flow {
+  position: absolute;
+  pointer-events: none;
+  z-index: -2;
+  background-color: transparent;
+  border: 3px solid transparent;
+  border-radius: 18px;
+
+  &_color {
+    &_red {
+      background-color: $fl-red-30;
+      border-color: $fl-red-100;
+    }
+    &_orange {
+      background-color: $fl-orange-30;
+      border-color: $fl-orange-100;
+    }
+    &_yellow {
+      background-color: $fl-yellow-30;
+      border-color: $fl-yellow-100;
+    }
+    &_green {
+      background-color: $fl-green-30;
+      border-color: $fl-green-100;
+    }
+    &_yellow {
+      background-color: $fl-yellow-30;
+      border-color: $fl-yellow-100;
+    }
+    &_blue {
+      background-color: $fl-blue-30;
+      border-color: $fl-blue-100;
+    }
+    &_dark-blue {
+      background-color: $fl-dark-blue-30;
+      border-color: $fl-dark-blue-100;
+    }
+    &_purple {
+      background-color: $fl-purple-30;
+      border-color: $fl-purple-100;
+    }
+    &_pink {
+      background-color: $fl-pink-30;
+      border-color: $fl-pink-100;
+    }
+  }
+}
