@@ -1,29 +1,31 @@
+@import "../../utils/styles/vars";
+@import "../../utils/styles/colors";
+@import "../../utils/styles/typography";
+
 .node {
+  @include node1;
   position: relative;
   min-height: 21px;
   padding: 4px 6px;
-  background-color: #fff;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 17px;
-  letter-spacing: 0.04em;
-  color: #000000e5;
+  background-color: $text-6;
+  font-family: $canvas-main-font;
+  color: $text-1;
   border: 2px solid transparent;
 
   &:hover {
-    background-color: #ff95001a;
+    background-color: $other-orange-10;
   }
 
   &:active {
-    border-color: #ff9500;
+    border-color: $other-orange-100;
   }
 
   &_type_response:hover {
-    background-color: #3399cc1a;
+    background-color: $other-cyan-10;
   }
 
   &_type_response:active {
-    border-color: #3399cc;
+    border-color: $other-cyan-100;
   }
 
   &_type_response {
@@ -31,16 +33,16 @@
     flex-direction: column;
     row-gap: 8px;
     border-radius: 12px 12px 0px 0px;
-    border-bottom-color: #3300ff1a;
+    border-bottom-color: $primary-2;
     padding: 8px 6px;
   }
 
   &_type_starter:hover {
-    background-color: #00cc991a;
+    background-color: $other-green-10;
   }
 
   &_type_starter:active {
-    border-color: #00cc99;
+    border-color: $other-green-100;
   }
 
   &__container {
@@ -65,17 +67,17 @@
   }
 
   &__desc {
-    color: #8d96b5;
+    color: $text-3;
   }
 
   &__marker {
     width: 4px;
     border-radius: 2px;
-    background-color: #ff9500;
+    background-color: $other-orange-100;
   }
 
   &_type_response &__marker {
-    background-color: #3399cc;
+    background-color: $other-cyan-100;
   }
 
   &_type_starter &__marker {
@@ -85,15 +87,13 @@
   }
 
   &__priority {
-    font-weight: 700;
-    font-size: 11px;
-    line-height: 13px;
-    color: #8d96b5;
+    @include prob1;
+    color: $text-3;
     align-self: center;
   }
 
   &__func-icon {
-    color: #8d96b5;
+    color: $text-3;
   }
 
   &__add-transition-btn {
@@ -103,8 +103,8 @@
     transform: translate(50%, -50%);
     width: 12px;
     height: 12px;
-    background: #ffffff;
-    border: 3px solid #8d96b5;
+    background: $text-6;
+    border: 3px solid $text-3;
     border-radius: 50%;
     display: none;
 
@@ -113,7 +113,7 @@
       position: absolute;
       font-size: 20px;
       font-weight: 900;
-      color: #8d96b5;
+      color: $text-3;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -60%);
@@ -124,8 +124,8 @@
     &:active {
       width: 24px;
       height: 24px;
-      background: #f9fafc;
-      border: 1.5px solid #8d96b5;
+      background: $bg-2;
+      border: 1.5px solid $text-3;
 
       &::after {
         display: block;

@@ -1,0 +1,27 @@
+@import "../../utils/styles/vars";
+@import "../../utils/styles/colors";
+@import "../../utils/styles/typography";
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: $bg-5;
+
+  &__viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    -webkit-transform-origin: top left;
+    -ms-transform-origin: top left;
+    transform-origin: top left;
+  }
+  &__svg-edges {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    overflow: visible;
+    top: 0;
+    left: 0;
+  }
+}

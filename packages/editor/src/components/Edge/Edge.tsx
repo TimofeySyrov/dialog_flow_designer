@@ -66,7 +66,9 @@ const Edge: FC<{ edge: GEdge; pathPoints: EdgePathD }> = ({
     <>
       {/* Invisible wide path for easier hovering */}
       <path
-        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")} ${styles.edge}`}
+        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")} ${
+          styles["edge-invisible"]
+        }`}
         d={getPathD(pathPoints)}
         onMouseEnter={() => hoverEdge(fromId, toId)}
         onMouseLeave={() => hoverEdge(null)}
@@ -74,14 +76,14 @@ const Edge: FC<{ edge: GEdge; pathPoints: EdgePathD }> = ({
 
       {/* Actual visible path */}
       <path
-        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")}`}
-        style={{
-          fill: "transparent",
-          stroke: highlighted ? "rgba(52, 211, 153)" : "grey",
-          strokeWidth: highlighted ? "3" : "1",
-          shapeRendering: "geometricPrecision",
-          pointerEvents: "none",
-        }}
+        className={`edge-${fromId.split("#").join("")}-${toId.split("#").join("")} ${styles.edge}`}
+        // style={{
+        //   fill: "transparent",
+        //   stroke: highlighted ? "rgba(52, 211, 153)" : "grey",
+        //   strokeWidth: highlighted ? "3" : "1",
+        //   shapeRendering: "geometricPrecision",
+        //   pointerEvents: "none",
+        // }}
         d={getPathD(pathPoints)}
       />
     </>

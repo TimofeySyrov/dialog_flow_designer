@@ -1,8 +1,8 @@
 import { FC } from "react";
 
 import { GNode, Turn } from "../../types";
-import nodeFallbackSvg from "../../utils/icons/nodeFallback.svg";
-import nodeStartSvg from "../../utils/icons/nodeStart.svg";
+import nodeFallbackSvg from "/icons/nodeFallback.svg";
+import nodeStartSvg from "/icons/nodeStart.svg";
 
 import styles from "./node.module.scss";
 

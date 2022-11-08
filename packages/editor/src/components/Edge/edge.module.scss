@@ -1,6 +1,18 @@
-.edge {
+@import "../../utils/styles/vars";
+@import "../../utils/styles/colors";
+@import "../../utils/styles/typography";
+
+.edge-invisible {
   fill: transparent;
   stroke: transparent;
   stroke-width: 20px;
   pointer-events: stroke;
+}
+
+.edge {
+  fill: transparent;
+  stroke: $arrow-100;
+  stroke-width: 2px;
+  shape-rendering: geometricPrecision;
+  pointer-events: none;
 }

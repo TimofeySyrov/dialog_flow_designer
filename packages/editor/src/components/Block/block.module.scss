@@ -1,8 +1,12 @@
+@import "../../utils/styles/vars";
+@import "../../utils/styles/colors";
+@import "../../utils/styles/typography";
+
 .block {
   width: 272px;
   position: absolute;
   border-radius: 12px;
-  background-color: #fff;
+  background-color: $bg-1;
 
   &__conditions {
     display: flex;
@@ -10,8 +14,8 @@
   }
 
   &__suggestions-btn {
-    font-size: 10px;
-    color: #8D96B5;
+    @include b5;
+    color: $text-3;
     width: 100%;
     text-align: center;
     margin-top: 8px;

@@ -14,28 +14,13 @@ import { GEdge, XY } from "../../types";
 
 import Edge, { getPathD } from "../Edge/Edge";
 import Block from "../Block/Block";
+import Flow from "../Flow/Flow";
 
 import styles from "./canvas.module.scss";
 
 const scrollSpeedModifier = 0.5;
 const maxZoom = 1;
 const minZoom = 0.1;
-
-const hex2rgba = (hex: string, alpha = 1) => {
-  const [r, g, b] = hex.match(/\w\w/g)!.map((x) => parseInt(x, 16));
-  return `rgba(${r},${g},${b},${alpha})`;
-};
-
-// This coloring was added last-minute for demo purposes
-// It should be replaced by something more robust
-const colors = ["#e9a7a1", "#ecbaa2", "#edd9a3", "#a2e2b0", "#b1c8ed", "#b3abdf", "#edc2d5"];
-const colorMap = new Map<string, string>();
-const colorFlow = (flowName: string) => {
-  if (!colorMap.has(flowName)) {
-    colorMap.set(flowName, colors[colorMap.size % colors.length]);
-  }
-  return colorMap.get(flowName);
-};
 
 useStore.setState({
   graph: plotToGraph(bookPlot),
@@ -237,7 +222,7 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
   return (
     <div
       ref={canvasRef}
-      className="h-full bg-neutral-200 w-full overflow-hidden"
+      className={styles.canvas}
       style={{ cursor: ctrlHeld ? "move" : "default" }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -247,45 +232,27 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     >
       <div
         ref={viewportRef}
-        className={cn(
-          "h-full w-full relative origin-top-left",
-          viewportJumping && "transition-transform"
-        )}
+        className={`${styles.canvas__viewport} ${cn(viewportJumping && "transition-transform")}`}
         onTransitionEnd={endJump}
         style={{
           transform: Rematrix.toString(viewTransform),
         }}
       >
         {graphBlocks.map(({ response }) => {
-          const pos = { x: 0, y: 0 };
+          const { id, flow } = response;
+          const x = 0 - columnGap / 2 - 3;
+          const y = 0 - rowGap / 2 - 3;
           const width = columnGap + 6; //blockWidth +
           const height = rowGap + 6; //blockHeight +
-          return (
-            <div
-              key={"bg" + response.id}
-              className={
-                "absolute pointer-events-none" + ` bgFlow-${response.id.split("#").join("")}`
-              }
-              style={{
-                transform: `translate(${pos.x - columnGap / 2 - 3}px, ${pos.y - rowGap / 2 - 3}px)`,
-                background: `${
-                  colorFlow(response.flow) && hex2rgba(colorFlow(response.flow)!, 0.3)
-                }`,
-                border: `3px solid ${colorFlow(response.flow)}`,
-                borderRadius: "18px",
-                width,
-                height,
-                zIndex: -2,
-              }}
-            ></div>
-          );
+
+          return <Flow key={"bg" + id} flow={{ id, flow, x, y, width, height }} />;
         })}
 
         <svg
           version="1.1"
           baseProfile="full"
           xmlns="http://www.w3.org/2000/svg"
-          className="h-full w-full top-0 left-0 absolute overflow-visible"
+          className={styles["canvas__svg-edges"]}
           style={{ zIndex: -1 }}
         >
           {graph.edges.map((e) => {
