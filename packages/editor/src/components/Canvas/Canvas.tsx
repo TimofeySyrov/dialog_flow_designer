@@ -19,7 +19,7 @@ import Flow from "../Flow/Flow";
 import styles from "./canvas.module.scss";
 
 const scrollSpeedModifier = 0.5;
-const maxZoom = 1;
+const maxZoom = 10;
 const minZoom = 0.1;
 
 useStore.setState({
@@ -238,6 +238,30 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           transform: Rematrix.toString(viewTransform),
         }}
       >
+        {/* Grid */}
+        <svg
+          style={{
+            width: `${viewportRef.current?.scrollWidth}`,
+            height: `${viewportRef.current?.scrollHeight}`,
+            position: "absolute",
+            zIndex: "-3",
+          }}
+        >
+          <defs>
+            <pattern id="grid" width="96" height="40" patternUnits="userSpaceOnUse">
+              <path
+                d="M4 0V8M0 4H8"
+                stroke="#47525C"
+                strokeOpacity="0.6"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </pattern>
+          </defs>
+
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+
         {graphBlocks.map(({ response }) => {
           const { id, flow } = response;
           const x = 0 - columnGap / 2 - 3;
