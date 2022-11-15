@@ -7,10 +7,10 @@ import useResizeObserver from "use-resize-observer";
 import bookPlot from "../../__mocks__/mockPlotWithFlows";
 import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
 import pick from "../../utils/helpers/pick";
-import { columnGap, getLayout, rowGap, useLayout } from "../../utils/helpers/layout";
+import { columnGap, getLayout, rowGap } from "../../utils/helpers/layout";
 import { useGraphBlocks } from "../../utils/helpers/graphBlocks";
 import { plotToGraph } from "../../utils/helpers/plot";
-import { GEdge, Size, XY, STRUCTURE_RENDER_TYPE } from "../../types";
+import { GEdge, Size, XY, GraphRenderType } from "../../types";
 import Edge, { getPathD } from "../Edge/Edge";
 import Block from "../Block/Block";
 import Flow from "../Flow/Flow";
@@ -30,6 +30,7 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     pick("viewTransform", "viewportJumping"),
     shallow
   );
+  const { grid, renderType } = useStore();
 
   const graph = useGraph();
   const graphBlocks = useGraphBlocks(graph);
@@ -45,12 +46,10 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     },
   });
 
-  // Handle control key (used for panning with mouse when held), and prevent ctrl+scroll
-  // causing page level zoom
-  const [ctrlHeld, setCtrlHeld] = useState(false);
-  useEffect(() => {
+  const updateCanvas = (renderTypeState: GraphRenderType) => {
+    viewportRef.current!.style.transform = "";
     const blockSizes = getBlockSizes();
-    const layoutPos = getLayout(graph, blockSizes, STRUCTURE_RENDER_TYPE);
+    const layoutPos = getLayout(graph, blockSizes, renderTypeState);
     graphBlocks.forEach(({ response }) => {
       updateNodePosition(response.id, layoutPos[response.id]);
       updateFlowBgPosition(response.id);
@@ -62,6 +61,14 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     useStore.setState({
       viewTransform: Rematrix.multiply(Rematrix.scale(0.25), Rematrix.translate(300, 50)),
     });
+    viewportRef.current!.style.transform = Rematrix.toString(viewTransform);
+  };
+
+  // Handle control key (used for panning with mouse when held), and prevent ctrl+scroll
+  // causing page level zoom
+  const [ctrlHeld, setCtrlHeld] = useState(false);
+  useEffect(() => {
+    updateCanvas(renderType)
 
     const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(true);
     const handleKeyUp = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(false);
@@ -75,6 +82,9 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
       window.removeEventListener("wheel", preventZoom);
     };
   }, []);
+
+  // Rerender Canvas on renderType change
+  useEffect(() => useStore.subscribe((state) => state.renderType, updateCanvas), []);
 
   const getBlockSizes = () => {
     const blocksWithSizes = new Map<string, Size>();
@@ -242,6 +252,7 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
             height: `${viewportRef.current?.scrollHeight}`,
             position: "absolute",
             zIndex: "-3",
+            display: grid ? "block" : "none",
           }}
         >
           <defs>
