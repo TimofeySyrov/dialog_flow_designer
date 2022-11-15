@@ -1,13 +1,24 @@
 import produce from "immer";
 import create from "zustand";
 import { Plot } from "@dialog-flow-designer/shared-types/df-parser-server";
-import { GEdge, GNode, Graph, Mode, Size, Turn, XY } from "./types";
+import {
+  GEdge,
+  GNode,
+  Graph,
+  GraphRenderType,
+  Mode,
+  Size,
+  STRUCTURE_RENDER_TYPE,
+  Turn,
+  XY,
+} from "./types";
 import { plotToGraph } from "./utils/helpers/plot";
 import { MsgSub, sendMessage, useMessages } from "./messaging";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { nanoid } from "nanoid";
 import * as Rematrix from "rematrix";
 import shallow from "zustand/shallow";
+import { subscribeWithSelector } from "zustand/middleware";
 import pick from "./utils/helpers/pick";
 
 /**
@@ -56,6 +67,13 @@ export interface State {
    * Indicates whether the viewport is currently "jumping", ie. programatically
    * moving with CSS transitions enabled
    */
+
+  renderType: GraphRenderType;
+
+  cursorType: "arrow" | "hand";
+
+  grid: boolean;
+
   viewportJumping: boolean;
   /**
    * IDs of nodes that are connected to hovered node, or an edge between them is hovered
@@ -83,6 +101,9 @@ const createDefaultState = (): State => ({
   virtualGraph: emptyGraph(),
   viewTransform: Rematrix.identity(),
   canvasSize: { width: 0, height: 0 },
+  renderType: STRUCTURE_RENDER_TYPE,
+  cursorType: "arrow",
+  grid: true,
   viewportJumping: false,
   selectedNodeId: null,
   mode: Mode.DEFAULT,
@@ -95,7 +116,7 @@ const createDefaultState = (): State => ({
  *
  * @see https://github.com/pmndrs/zustand#recipes
  */
-export const useStore = create<State>(createDefaultState);
+export const useStore = create(subscribeWithSelector(() => createDefaultState()));
 
 // ACTIONS
 
