@@ -70,6 +70,11 @@ export enum Mode {
   ADD,
 }
 
+export const STRUCTURE_RENDER_TYPE = "structure";
+export const AUTO_RENDER_TYPE = "auto";
+
+export type GraphRenderType = typeof STRUCTURE_RENDER_TYPE | typeof AUTO_RENDER_TYPE;
+
 /**
  * Renderable form of plot as an edge list
  */

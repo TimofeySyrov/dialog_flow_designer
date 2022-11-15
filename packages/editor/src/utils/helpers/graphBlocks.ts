@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { GNode, Graph } from "../types";
+import { GNode, Graph } from "../../types";
 
 export interface Block {
   response: GNode;

@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 
-import { GNode, Graph, XY } from "../types";
+import { GNode, Graph, Size, XY, GraphRenderType } from "../../types";
+
+import { getGraphBlocks } from "./graphBlocks";
 
 // This is a basic (kinda hacky, but functional) layout algo. Might need serious rework.
 // The idea is to use a osrt of constrained force-based layout: we make N iterations,
@@ -20,7 +22,7 @@ export const rowGap = 40;
 /**
  * Layout nodes hold the parameters we are optimizing during layout
  */
-interface LayoutNode {
+export interface LayoutNode {
   /**
    * The vertical position of this node relative to it's immediate parent.
    *
@@ -43,12 +45,11 @@ const F = 0.01;
  */
 const maxIter = 100;
 
-export interface BSizes {
-  height: number;
-  width: number;
-}
-
-export const getLayout = (graph: Graph, sizes: Map<string, BSizes>) => {
+export const getLayout = (
+  graph: Graph,
+  sizes: Map<string, Size>,
+  renderType: GraphRenderType
+) => {
   const { nodes, edges } = graph;
 
   /**
@@ -67,6 +68,8 @@ export const getLayout = (graph: Graph, sizes: Map<string, BSizes>) => {
     if (!childMap.has(fromId)) childMap.set(fromId, []);
     childMap.get(fromId)!.push(toId);
   });
+
+  const blocks = getGraphBlocks(graph);
 
   // PHASE I.
 
@@ -181,10 +184,62 @@ export const getLayout = (graph: Graph, sizes: Map<string, BSizes>) => {
     return Math.max(height, childrenHeight);
   };
 
-  getChildrenHeight(firstColumn, 0);
+  const getFlowHeight = (flowId: string) => {
+    const flowNodes: number[] = nodes
+      .filter((n) => n.flow === flowId)
+      .map((n) => sizes.get(n.id)?.height || 0);
+
+    return Math.max(...flowNodes);
+  };
+
+  const computeStructurePositions = () => {
+    const flows: string[] = [];
+    nodes.forEach((n) => {
+      if (flows.find((f) => f === n.flow)) return;
+      flows.push(n.flow);
+    });
+
+    const flowsHeight = new Map<string, number>();
+    flows.forEach((f) => {
+      if (flowsHeight.has(f)) return;
+      flowsHeight.set(f, getFlowHeight(f));
+    });
+
+    flows.forEach((flowId, flowIndex) => {
+      const flowNodes = blocks.filter(({ response }) => response.flow === flowId);
+      const flowHeight = flowsHeight.get(flowId) ?? 0;
+      const flowIdAbove = flows[flowIndex === 0 ? 0 : flowIndex - 1];
+      const flowAboveHeight = flowIdAbove === flowId ? 0 : flowsHeight.get(flowIdAbove) ?? 0;
+
+      flowNodes.forEach((b, nIndex) => {
+        const { id } = b.response;
+        const { width, height } = sizes.get(id) || { width: 0, height: 0 };
+
+        const x = nIndex * (width + columnGap);
+        const y = flowAboveHeight + rowGap;
+
+        flowsHeight.set(flowId, flowAboveHeight + flowHeight + rowGap * 2);
+        positions[id] = { x, y };
+      });
+    });
+  };
+
+  switch (renderType) {
+    case "structure":
+      computeStructurePositions();
+      break;
+
+    case "auto":
+      getChildrenHeight(firstColumn, 0);
+      break;
+
+    default:
+      getChildrenHeight(firstColumn, 0);
+      break;
+  }
 
   return positions;
 };
 
-export const useLayout = (graph: Graph, sizes: Map<string, BSizes>) =>
-  useMemo(() => getLayout(graph, sizes), [graph, sizes]);
+export const useLayout = (graph: Graph, sizes: Map<string, Size>, renderType: GraphRenderType) =>
+  useMemo(() => getLayout(graph, sizes, renderType), [graph, sizes, renderType]);
