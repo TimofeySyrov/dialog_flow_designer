@@ -51,6 +51,11 @@ cd packages/extension
 code --extensionDevelopmentPath=$(pwd) --disable-extensions # Remove the $ for fish
 ```
 
+Open editor in browser:
+```bash
+pnpm run dev:web
+```
+
 The editor has a storybook. To view it locally run:
 
 ```bash
