@@ -1,4 +1,5 @@
 import Canvas from "./components/Canvas/Canvas";
+import TopBar from "./components/TopBar/TopBar";
 import { useEditorMessages } from "./store";
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
           />
         )}
       </div> */}
-
+      <TopBar />
       <Canvas />
 
       {/* <Graph /> */}

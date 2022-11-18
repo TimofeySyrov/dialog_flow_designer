@@ -6,6 +6,9 @@ import nodeStartSvg from "/icons/nodeStart.svg";
 
 import styles from "./node.module.scss";
 
+export const getNodeElement = (parentRef: React.RefObject<Element>, id: string) =>
+  parentRef.current?.querySelector(`.node-${id.split("#").join("")}`);
+
 const Node: FC<{
   node: GNode;
   starter?: boolean;

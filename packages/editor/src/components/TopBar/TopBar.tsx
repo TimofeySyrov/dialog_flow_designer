@@ -20,7 +20,7 @@ import { AUTO_RENDER_TYPE, STRUCTURE_RENDER_TYPE } from "../../types";
 import s from "./topBar.module.scss";
 
 const TopBar = () => {
-  const { grid, renderType } = useStore();
+  const { grid, renderType, viewTransform } = useStore();
 
   const handeButton = (changes: Partial<State>) => {
     useStore.setState(changes);
@@ -94,7 +94,7 @@ const TopBar = () => {
             <img src={zoomOut} alt="Zoom out" />
           </button>
           <button className={s["zoom__size"]}>
-            <span>100%</span>
+            <span>{(viewTransform[0] * 100).toFixed()}%</span>
             <img src={chevronDown} alt="More" />
           </button>
           <button>

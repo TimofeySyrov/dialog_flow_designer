@@ -1,19 +1,20 @@
-import React, { FC, useRef, useState, useEffect } from "react";
+import React, { FC, useRef, useState, useEffect, useCallback } from "react";
 import * as Rematrix from "rematrix";
 import cn from "classnames";
 import shallow from "zustand/shallow";
 import useResizeObserver from "use-resize-observer";
 
 import bookPlot from "../../__mocks__/mockPlotWithFlows";
-import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
 import pick from "../../utils/helpers/pick";
-import { columnGap, getLayout, rowGap } from "../../utils/helpers/layout";
+import { getLayout } from "../../utils/helpers/layout";
 import { useGraphBlocks } from "../../utils/helpers/graphBlocks";
 import { plotToGraph } from "../../utils/helpers/plot";
-import { GEdge, Size, XY, GraphRenderType } from "../../types";
-import Edge, { getPathD } from "../Edge/Edge";
-import Block from "../Block/Block";
-import Flow from "../Flow/Flow";
+import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
+import { Size, GraphRenderType } from "../../types";
+import Edge, { updateEdgePosition } from "../Edge/Edge";
+import Block, { getBlockElement, updateBlockPosition } from "../Block/Block";
+import Flow, { updateFlowPosition } from "../Flow/Flow";
+import Grid from "../Grid/Grid";
 
 import styles from "./canvas.module.scss";
 
@@ -30,45 +31,79 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     pick("viewTransform", "viewportJumping"),
     shallow
   );
-  const { grid, renderType } = useStore();
-
+  const { renderType, grid, canvasSize } = useStore();
   const graph = useGraph();
   const graphBlocks = useGraphBlocks(graph);
   const canvasRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Handle control key (used for panning with mouse when held), and prevent ctrl+scroll
+  // causing page level zoom
+  const [ctrlHeld, setCtrlHeld] = useState(false);
 
   // Update the canvas size in store, which is used for calculating viewport transform
   // when focusing a set point.
   useResizeObserver<HTMLDivElement>({
     ref: canvasRef,
     onResize: ({ height = 0, width = 0 }) => {
-      useStore.setState({ canvasSize: { width, height } });
+      const scrollWidth = viewportRef.current?.scrollWidth || 0;
+      const scrollHeight = viewportRef.current?.scrollHeight || 0;
+
+      useStore.setState({ canvasSize: { width: scrollWidth, height: scrollHeight } });
     },
   });
 
+  const getBlockSizes = () => {
+    const blocksWithSizes = new Map<string, Size>();
+
+    graphBlocks.forEach(({ response }) => {
+      const size = getBlockElement(canvasRef, response.id)?.getBoundingClientRect();
+      if (!size) return;
+      blocksWithSizes.set(response.id, { width: size.width, height: size.height });
+    });
+
+    return blocksWithSizes;
+  };
+
   const updateCanvas = (renderTypeState: GraphRenderType) => {
+    // Remove viewport transform for correct rerender without transform style context
     viewportRef.current!.style.transform = "";
     const blockSizes = getBlockSizes();
     const layoutPos = getLayout(graph, blockSizes, renderTypeState);
-    graphBlocks.forEach(({ response }) => {
-      updateNodePosition(response.id, layoutPos[response.id]);
-      updateFlowBgPosition(response.id);
-    });
 
-    graph.edges.forEach((e) => updateEdgePosition(e));
+    // Update Blocks, Flows, Edges positions
+    graphBlocks.forEach(({ response }) => {
+      updateBlockPosition(canvasRef, response.id, layoutPos[response.id]);
+      updateFlowPosition(canvasRef, response.id);
+    });
+    graph.edges.forEach((e) => updateEdgePosition(canvasRef, e));
+
+    //Update canvasSize and Grid component
+    if (viewportRef.current) {
+      /* Hide Grid component to get correct scroll values
+      not considering grid sizes */
+      gridRef.current && (gridRef.current.style.display = "none");
+      useStore.setState({
+        canvasSize: {
+          width: viewportRef.current.scrollWidth,
+          height: viewportRef.current.scrollHeight,
+        },
+      });
+      gridRef.current && (gridRef.current.style.display = "block");
+    }
 
     // Update matrix after updating all of positions
     useStore.setState({
       viewTransform: Rematrix.multiply(Rematrix.scale(0.25), Rematrix.translate(300, 50)),
     });
-    viewportRef.current!.style.transform = Rematrix.toString(viewTransform);
+    viewportRef.current!.style.transform = Rematrix.toString(useStore.getState().viewTransform);
   };
 
-  // Handle control key (used for panning with mouse when held), and prevent ctrl+scroll
-  // causing page level zoom
-  const [ctrlHeld, setCtrlHeld] = useState(false);
   useEffect(() => {
-    updateCanvas(renderType)
+    updateCanvas(renderType);
+    // Rerender Canvas, when renderType is changed
+    useStore.subscribe((state) => state.renderType, updateCanvas);
 
     const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(true);
     const handleKeyUp = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(false);
@@ -82,93 +117,6 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
       window.removeEventListener("wheel", preventZoom);
     };
   }, []);
-
-  // Rerender Canvas on renderType change
-  useEffect(() => useStore.subscribe((state) => state.renderType, updateCanvas), []);
-
-  const getBlockSizes = () => {
-    const blocksWithSizes = new Map<string, Size>();
-
-    graphBlocks.forEach(({ response }) => {
-      const el = canvasRef.current?.querySelector(`.block-${response.id.split("#").join("")}`);
-      const { width, height } = el?.getBoundingClientRect() || { width: 0, height: 0 };
-      blocksWithSizes.set(response.id, { width, height });
-    });
-
-    return blocksWithSizes;
-  };
-
-  const getEdgeElements = ({ fromId, toId }: GEdge) => {
-    return canvasRef.current?.querySelectorAll(
-      `.edge-${fromId.split("#").join("")}-${toId.split("#").join("")}`
-    );
-  };
-
-  const getBlockElement = (id: string) => {
-    return canvasRef.current?.querySelector(
-      `.block-${id.split("#").join("")}`
-    ) as HTMLElement | null;
-  };
-
-  const getNodeElement = (id: string) => {
-    return canvasRef.current?.querySelector(
-      `.node-${id.split("#").join("")}`
-    ) as HTMLElement | null;
-  };
-
-  const getBlockFlowBgElement = (id: string) => {
-    return canvasRef.current?.querySelector(
-      `.bgFlow-${id.split("#").join("")}`
-    ) as HTMLElement | null;
-  };
-
-  const updateNodePosition = (id: string, coords: XY) => {
-    const el = getBlockElement(id);
-    if (el !== null) {
-      el.style.transform = `translate(${coords.x}px, ${coords.y}px)`;
-    }
-  };
-
-  const updateEdgePosition = (edge: GEdge) => {
-    const edgeElements = getEdgeElements(edge);
-    const fromNode = getNodeElement(edge.fromId)?.getBoundingClientRect();
-    const toNode = getNodeElement(edge.toId)?.getBoundingClientRect();
-
-    if (fromNode !== undefined && toNode !== undefined) {
-      const pathD = getPathD({
-        from: {
-          width: fromNode.width,
-          height: fromNode.height,
-          x: fromNode.x - canvasRef.current!.offsetLeft,
-          y: fromNode.y - canvasRef.current!.offsetTop,
-        },
-        to: {
-          width: toNode.width,
-          height: toNode.height,
-          x: toNode.x - canvasRef.current!.offsetLeft,
-          y: toNode.y - canvasRef.current!.offsetTop,
-        },
-      });
-
-      edgeElements?.forEach((el) => el?.setAttribute("d", pathD));
-    }
-  };
-
-  const updateFlowBgPosition = (blockId: string) => {
-    const bgEl = getBlockFlowBgElement(blockId);
-    const blockElSizes = getBlockElement(blockId)?.getBoundingClientRect();
-
-    if (bgEl !== null && blockElSizes !== undefined) {
-      const width = blockElSizes.width + columnGap + 6;
-      const height = blockElSizes.height + rowGap + 6;
-
-      bgEl.style.width = width + "px";
-      bgEl.style.height = height + "px";
-      bgEl.style.transform = `translate(${
-        blockElSizes.x - canvasRef.current!.offsetLeft - columnGap / 2 - 3
-      }px, ${blockElSizes.y - canvasRef.current!.offsetTop - rowGap / 2 - 3}px)`;
-    }
-  };
 
   // Just in case control was pressed/released outside of our window
   const handleMouseEnter: React.MouseEventHandler = (ev) =>
@@ -245,39 +193,25 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           transform: Rematrix.toString(viewTransform),
         }}
       >
-        {/* Grid */}
-        <svg
-          style={{
-            width: `${viewportRef.current?.scrollWidth}`,
-            height: `${viewportRef.current?.scrollHeight}`,
-            position: "absolute",
-            zIndex: "-3",
-            display: grid ? "block" : "none",
-          }}
-        >
-          <defs>
-            <pattern id="grid" width="96" height="40" patternUnits="userSpaceOnUse">
-              <path
-                d="M4 0V8M0 4H8"
-                stroke="#47525C"
-                strokeOpacity="0.6"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </pattern>
-          </defs>
-
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
+        {grid && (
+          <div ref={gridRef}>
+            <Grid width={canvasSize.width} height={canvasSize.height} />
+          </div>
+        )}
 
         {graphBlocks.map(({ response }) => {
           const { id, flow } = response;
-          const x = 0 - columnGap / 2 - 3;
-          const y = 0 - rowGap / 2 - 3;
-          const width = columnGap + 6; //blockWidth +
-          const height = rowGap + 6; //blockHeight +
 
-          return <Flow key={"bg" + id} flow={{ id, flow, x, y, width, height }} />;
+          return (
+            <Flow
+              key={"bg" + id}
+              id={id}
+              flow={flow}
+              coords={{ x: 0, y: 0 }}
+              width={0}
+              height={0}
+            />
+          );
         })}
 
         <svg
@@ -310,17 +244,14 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
             );
           })}
         </svg>
-        {graphBlocks.map((block, index) => (
+        {graphBlocks.map((b) => (
           <Block
-            key={block.response.id}
-            starter={block.response.label === "start"}
-            block={block}
+            key={b.response.id}
+            block={b}
             layoutPos={{ x: 0, y: 0 }}
+            starter={b.response.label === "start"}
           />
         ))}
-        {/* {graph.nodes.map((node) => (
-          <CanvasNode key={node.id} node={node} layoutPos={nodeLayoutPositions[node.id]} />
-        ))} */}
       </div>
     </div>
   );
