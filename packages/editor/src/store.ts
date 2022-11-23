@@ -12,7 +12,7 @@ import {
   Turn,
   XY,
 } from "./types";
-import { plotToGraph } from "./utils/helpers/plot";
+import { plotToGraph } from "./utils/helpers/usePlotToGraph";
 import { MsgSub, sendMessage, useMessages } from "./messaging";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { nanoid } from "nanoid";
@@ -87,9 +87,10 @@ export interface State {
 
 // UTILS
 
-const emptyGraph = (): Graph => ({ nodes: [], edges: [] });
+const emptyGraph = (): Graph => ({ flows: [], nodes: [], edges: [] });
 
 const getVisibleGraph = (graph: Graph, virtualGraph: Graph) => ({
+  flows: [...graph.flows, ...virtualGraph.flows],
   nodes: [...graph.nodes, ...virtualGraph.nodes],
   edges: [...graph.edges, ...virtualGraph.edges],
 });

@@ -1,14 +1,14 @@
-import React, { FC, useRef, useState, useEffect, useCallback } from "react";
+import React, { FC, useRef, useState, useEffect } from "react";
 import * as Rematrix from "rematrix";
 import cn from "classnames";
 import shallow from "zustand/shallow";
 import useResizeObserver from "use-resize-observer";
 
-import bookPlot from "../../__mocks__/mockPlotWithFlows";
+import newMockPlot from "../../__mocks__/mockPlot.json";
 import pick from "../../utils/helpers/pick";
-import { getLayout } from "../../utils/helpers/layout";
-import { useGraphBlocks } from "../../utils/helpers/graphBlocks";
-import { plotToGraph } from "../../utils/helpers/plot";
+import { getLayout } from "../../utils/helpers/useLayout";
+import { plotToGraph } from "../../utils/helpers/usePlotToGraph";
+import useDrag from "../../utils/helpers/useDrag";
 import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
 import { Size, GraphRenderType } from "../../types";
 import Edge, { updateEdgePosition } from "../Edge/Edge";
@@ -23,7 +23,7 @@ const maxZoom = 1;
 const minZoom = 0.1;
 
 useStore.setState({
-  graph: plotToGraph(bookPlot),
+  graph: plotToGraph(JSON.parse(JSON.stringify(newMockPlot))),
 });
 
 const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) => {
@@ -33,7 +33,6 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
   );
   const { renderType, grid, canvasSize } = useStore();
   const graph = useGraph();
-  const graphBlocks = useGraphBlocks(graph);
   const canvasRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -57,10 +56,10 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
   const getBlockSizes = () => {
     const blocksWithSizes = new Map<string, Size>();
 
-    graphBlocks.forEach(({ response }) => {
-      const size = getBlockElement(canvasRef, response.id)?.getBoundingClientRect();
+    graph.nodes.forEach(({ id }) => {
+      const size = getBlockElement(canvasRef, id)?.getBoundingClientRect();
       if (!size) return;
-      blocksWithSizes.set(response.id, { width: size.width, height: size.height });
+      blocksWithSizes.set(id, { width: size.width, height: size.height });
     });
 
     return blocksWithSizes;
@@ -73,9 +72,9 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     const layoutPos = getLayout(graph, blockSizes, renderTypeState);
 
     // Update Blocks, Flows, Edges positions
-    graphBlocks.forEach(({ response }) => {
-      updateBlockPosition(canvasRef, response.id, layoutPos[response.id]);
-      updateFlowPosition(canvasRef, response.id);
+    graph.nodes.forEach((n) => {
+      updateBlockPosition(canvasRef, n.id, layoutPos[n.id]);
+      updateFlowPosition(canvasRef, n.id);
     });
     graph.edges.forEach((e) => updateEdgePosition(canvasRef, e));
 
@@ -199,20 +198,16 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           </div>
         )}
 
-        {graphBlocks.map(({ response }) => {
-          const { id, flow } = response;
-
-          return (
-            <Flow
-              key={"bg" + id}
-              id={id}
-              flow={flow}
-              coords={{ x: 0, y: 0 }}
-              width={0}
-              height={0}
-            />
-          );
-        })}
+        {graph.nodes.map((n) => (
+          <Flow
+            key={"bg" + n.id}
+            id={n.id}
+            flow={n.flowId}
+            coords={{ x: 0, y: 0 }}
+            width={0}
+            height={0}
+          />
+        ))}
 
         <svg
           version="1.1"
@@ -221,37 +216,26 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           className={styles["canvas__svg-edges"]}
           style={{ zIndex: -1 }}
         >
-          {graph.edges.map((e) => {
-            const fromBlock = graphBlocks.find((b) => b.response.id === e.fromId);
-            const isFromBlock = fromBlock !== undefined;
-
-            if (isFromBlock) {
-              const toIdIsBlockChild =
-                fromBlock.conditions?.find((c) => c.id === e.toId) !== undefined;
-
-              if (toIdIsBlockChild) return;
-            }
-
-            return (
-              <Edge
-                key={e.fromId + e.toId}
-                edge={e}
-                pathPoints={{
-                  from: { width: 0, height: 0, x: 0, y: 0 },
-                  to: { width: 0, height: 0, x: 0, y: 0 },
-                }}
-              />
-            );
-          })}
+          {graph.edges.map((e) => (
+            <Edge
+              key={`${e.fromId}-${e.toId}`}
+              edge={e}
+              pathPoints={{
+                from: { width: 0, height: 0, x: 0, y: 0 },
+                to: { width: 0, height: 0, x: 0, y: 0 },
+              }}
+            />
+          ))}
         </svg>
-        {graphBlocks.map((b) => (
-          <Block
-            key={b.response.id}
-            block={b}
-            layoutPos={{ x: 0, y: 0 }}
-            starter={b.response.label === "start"}
-          />
-        ))}
+        {graph.nodes.map((n) => {
+          const bRef = useRef(null);
+          const drag = useDrag({ ref: bRef });
+          return (
+            <div ref={bRef} key={n.id} draggable>
+              <Block block={n} layoutPos={{ x: 0, y: 0 }} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

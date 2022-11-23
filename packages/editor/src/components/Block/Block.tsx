@@ -5,16 +5,12 @@ import Node from "../Node/Node";
 import styles from "./block.module.scss";
 
 export interface GBlock {
-  block: {
-    response: GNode;
-    conditions?: GNode[];
-  };
-  starter?: Boolean;
+  block: GNode;
   layoutPos: XY;
 }
 
 export const getBlockElement = (parentRef: React.RefObject<Element>, id: string) =>
-  parentRef?.current?.querySelector(`.block-${id.split("#").join("")}`);
+  parentRef?.current?.querySelector(`.block-${id.replace("#", "")}`);
 
 export const updateBlockPosition = (
   parentRef: React.RefObject<Element>,
@@ -25,34 +21,28 @@ export const updateBlockPosition = (
   el.style.transform = `translate(${coords.x}px, ${coords.y}px)`;
 };
 
-const Block: FC<GBlock> = ({ block, starter, layoutPos }) => {
-  const hasConditions = Boolean(block.conditions?.length);
+const Block: FC<GBlock> = ({ block, layoutPos }) => {
+  const hasConditions = Boolean(block.transitions?.length);
 
   return (
     <div
-      className={`block-${block.response.id.split("#").join("")} ${styles.block}`}
+      className={`block-${block.id.replace("#", "")} ${styles.block}`}
       style={{ transform: `translate(${layoutPos.x}px, ${layoutPos.y}px)` }}
     >
       <Node
-        node={block.response}
-        selected={false}
-        starter={Boolean(starter)}
-        onClickAdd={function (): void {
-          throw new Error("Function not implemented.");
-        }}
+        id={block.id}
+        name={block.name}
+        label={block.response}
+        isResponse={true}
+        isStarter={Boolean(block.start_label)}
       />
       {hasConditions && (
         <div className={styles.block__conditions}>
-          {block.conditions?.map((node) => (
-            <Node
-              key={node.id}
-              node={node}
-              selected={false}
-              onClickAdd={function (): void {
-                throw new Error("Function not implemented.");
-              }}
-            />
-          ))}
+          {block.transitions
+            ?.sort((a, b) => a.index - b.index)
+            ?.map((tran) => (
+              <Node key={tran.id} id={tran.id} name={tran.name} isResponse={false} />
+            ))}
         </div>
       )}
 

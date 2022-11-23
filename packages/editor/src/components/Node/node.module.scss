@@ -11,6 +11,7 @@
   font-family: $canvas-main-font;
   color: $text-1;
   border: 2px solid transparent;
+  display: flex;
 
   &:hover {
     background-color: $other-orange-10;
@@ -57,7 +58,7 @@
   }
 
   &__name {
-    word-break: break-all;
+    word-break: break-word;
   }
 
   &_type_response > &__container > &__name {
@@ -71,7 +72,9 @@
   }
 
   &__marker {
-    width: 4px;
+    min-width: 4px;
+    max-width: 4px;
+    height: auto;
     border-radius: 2px;
     background-color: $other-orange-100;
   }
@@ -94,6 +97,7 @@
 
   &__func-icon {
     color: $text-3;
+    align-self: center;
   }
 
   &__add-transition-btn {

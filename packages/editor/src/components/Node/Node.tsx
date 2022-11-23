@@ -7,46 +7,43 @@ import nodeStartSvg from "/icons/nodeStart.svg";
 import styles from "./node.module.scss";
 
 export const getNodeElement = (parentRef: React.RefObject<Element>, id: string) =>
-  parentRef.current?.querySelector(`.node-${id.split("#").join("")}`);
+  parentRef.current?.querySelector(`.node-${id.replace("#", "")}`);
 
 const Node: FC<{
-  node: GNode;
-  starter?: boolean;
-  selected: boolean;
-  onClickAdd: () => void;
-}> = ({ node: { id, label, flow, turn }, starter = false, selected, onClickAdd }) => {
-  const isCondition = turn !== Turn.BOT;
-  const hasDesc = true;
-
+  id: string;
+  name: string;
+  label?: string;
+  isResponse: Boolean;
+  isStarter?: Boolean;
+}> = ({ id, label, name, isResponse, isStarter }) => {
   return (
     <div
-      className={`node-${id.split("#").join("")} ${styles.node} ${
-        !isCondition && styles.node_type_response
-      } ${starter && styles.node_type_starter}`}
+      className={`node-${id.replace("#", "")} ${styles.node} ${isResponse && styles.node_type_response} ${
+        isStarter && styles.node_type_starter
+      }`}
     >
       <div className={styles.node__container}>
         <div className={styles.node__marker}>
-          {starter && <img src={nodeStartSvg} alt="Start" />}
+          {isStarter && <img src={nodeStartSvg} alt="Start" />}
         </div>
-
         {/* The Condition type part */}
-        {isCondition && <span className={styles.node__priority}>0.5</span>}
-        {isCondition && <span className={styles["node__func-icon"]}>{`</>`}</span>}
+        {!isResponse && <span className={styles.node__priority}>0.5</span>}
+        {!isResponse && <span className={styles["node__func-icon"]}>{`</>`}</span>}
 
         <div className={styles.node__name}>
-          {label}
+          {name}
           {/* The Start type part */}
-          {starter && (
+          {isStarter && (
             <img className={styles.node__fallback} src={nodeFallbackSvg} alt="Fallback" />
           )}
         </div>
       </div>
 
       {/* The Start and Response types part */}
-      {!isCondition && hasDesc && <div className={styles.node__desc}>Sample text</div>}
+      {isResponse && label && <div className={styles.node__desc}>{label}</div>}
 
       <div className={styles["node__add-transition-btn"]}></div>
-      {!isCondition && (
+      {isResponse && (
         <div
           className={`${styles["node__add-transition-btn"]} ${styles["node__add-transition-btn_child"]}`}
         ></div>

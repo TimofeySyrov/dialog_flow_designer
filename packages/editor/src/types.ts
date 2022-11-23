@@ -20,12 +20,44 @@ export enum Turn {
   BOT,
 }
 
+export interface PlotMainSpace {
+  [flowName: string]: {
+    [nodeName: string]: {
+      RESPONSE: string;
+      TRANSITIONS: {
+        [transitionPath: string]: string | { label: string, id: string };
+      };
+      id?: string;
+      local?: Boolean;
+      start_label?: Boolean;
+      fallback_label?: Boolean;
+      flowId?: string;
+    };
+  };
+}
+
+export interface GFlow {
+  id: string;
+  name: string;
+  index: number;
+}
+
 export interface GNode {
   id: string;
-  label: string;
-  turn: Turn;
-  flow: string;
-  properties: Property[];
+  flowId: string;
+  name: string;
+  index: number;
+  local?: Boolean;
+  response?: string;
+  transitions?: {
+    id: string;
+    name: string;
+    index: number;
+    type?: "forward" | "previous" | "fallback" | "repeat" | "backward";
+  }[];
+  suggestions?: string[];
+  start_label?: Boolean;
+  fallback_label?: Boolean;
 }
 
 export interface GEdge {
@@ -34,6 +66,7 @@ export interface GEdge {
 }
 
 export interface Graph {
+  flows: GFlow[];
   nodes: GNode[];
   edges: GEdge[];
 }

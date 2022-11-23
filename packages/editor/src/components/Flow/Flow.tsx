@@ -1,7 +1,7 @@
 import { FC } from "react";
 
 import { XY } from "../../types";
-import { columnGap, rowGap } from "../../utils/helpers/layout";
+import { columnGap, rowGap } from "../../utils/helpers/useLayout";
 import { getBlockElement } from "../Block/Block";
 
 import styles from "./flow.module.scss";
@@ -14,7 +14,7 @@ export interface GFlow {
   height: number;
 }
 
-const idTemplate = (id: string): string => `flow-${id.split("#").join("")}`;
+const idTemplate = (id: string): string => `flow-${id.replace("#", "")}`;
 
 export const getFlowElement = (parentRef: React.RefObject<Element>, id: string) =>
   parentRef.current?.querySelector(`.${idTemplate(id)}`);
