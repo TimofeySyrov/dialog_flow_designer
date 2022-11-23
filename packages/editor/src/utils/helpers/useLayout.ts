@@ -2,8 +2,6 @@ import { useMemo } from "react";
 
 import { GNode, Graph, Size, XY, GraphRenderType } from "../../types";
 
-import { getGraphBlocks } from "./graphBlocks";
-
 // This is a basic (kinda hacky, but functional) layout algo. Might need serious rework.
 // The idea is to use a osrt of constrained force-based layout: we make N iterations,
 // in each we calculate our constraints (minimizing edge length and the distance between nodes in
@@ -45,12 +43,8 @@ const F = 0.01;
  */
 const maxIter = 100;
 
-export const getLayout = (
-  graph: Graph,
-  sizes: Map<string, Size>,
-  renderType: GraphRenderType
-) => {
-  const { nodes, edges } = graph;
+export const getLayout = (graph: Graph, sizes: Map<string, Size>, renderType: GraphRenderType) => {
+  const { flows, nodes, edges } = graph;
 
   /**
    * Map node IDs to nodes
@@ -68,8 +62,6 @@ export const getLayout = (
     if (!childMap.has(fromId)) childMap.set(fromId, []);
     childMap.get(fromId)!.push(toId);
   });
-
-  const blocks = getGraphBlocks(graph);
 
   // PHASE I.
 
@@ -104,11 +96,11 @@ export const getLayout = (
   };
 
   const flowTensions = (id: string) => {
-    const flow = nodeMap.get(id)!.flow;
-    const flowNodes = nodes.filter((n) => n.flow === flow && n.id !== id).map((n) => n.id);
+    const flow = nodeMap.get(id)!.flowId;
+    const flowNodes = nodes.filter((n) => n.flowId === flow && n.id !== id).map((n) => n.id);
     const ourIdx = layoutNodes.get(id)!.verticalIndex;
     const signedYDist = flowNodes.reduce(
-      (sum, nid) => sum + (layoutNodes.get(nid)!.verticalIndex - ourIdx),
+      (sum, nid) => sum + (layoutNodes.get(nid)?.verticalIndex || 0 - ourIdx),
       0
     );
     const tension = signedYDist * F;
@@ -156,12 +148,7 @@ export const getLayout = (
     Math.max(
       sortByVertIdx(children).reduce((heightUpToThisChild, childId) => {
         const prevChildY = nodeAboveY + heightUpToThisChild;
-        const childIsCondition = nodeMap.get(childId)?.turn === 0;
-        return (
-          heightUpToThisChild +
-          computePosition(childId, prevChildY, childIsCondition ? depth - 1 : depth) +
-          rowGap
-        );
+        return heightUpToThisChild + computePosition(childId, prevChildY, depth) + rowGap;
       }, 0) - rowGap,
       0
     );
@@ -186,40 +173,33 @@ export const getLayout = (
 
   const getFlowHeight = (flowId: string) => {
     const flowNodes: number[] = nodes
-      .filter((n) => n.flow === flowId)
+      .filter((n) => n.flowId === flowId)
       .map((n) => sizes.get(n.id)?.height || 0);
 
     return Math.max(...flowNodes);
   };
 
   const computeStructurePositions = () => {
-    const flows: string[] = [];
-    nodes.forEach((n) => {
-      if (flows.find((f) => f === n.flow)) return;
-      flows.push(n.flow);
-    });
-
     const flowsHeight = new Map<string, number>();
-    flows.forEach((f) => {
-      if (flowsHeight.has(f)) return;
-      flowsHeight.set(f, getFlowHeight(f));
+    flows.forEach(({ id }) => {
+      if (flowsHeight.has(id)) return;
+      flowsHeight.set(id, getFlowHeight(id));
     });
 
-    flows.forEach((flowId, flowIndex) => {
-      const flowNodes = blocks.filter(({ response }) => response.flow === flowId);
-      const flowHeight = flowsHeight.get(flowId) ?? 0;
-      const flowIdAbove = flows[flowIndex === 0 ? 0 : flowIndex - 1];
-      const flowAboveHeight = flowIdAbove === flowId ? 0 : flowsHeight.get(flowIdAbove) ?? 0;
+    flows.forEach((flow) => {
+      const flowNodes = nodes.filter(({ flowId }) => flowId === flow.id);
+      const flowHeight = flowsHeight.get(flow.id) ?? 0;
+      const flowIdAbove = flows[flow.index === 0 ? 0 : flow.index - 1].id;
+      const flowAboveHeight = flowIdAbove === flow.id ? 0 : flowsHeight.get(flowIdAbove) ?? 0;
 
-      flowNodes.forEach((b, nIndex) => {
-        const { id } = b.response;
-        const { width, height } = sizes.get(id) || { width: 0, height: 0 };
+      flowNodes.forEach((node) => {
+        const { width, height } = sizes.get(node.id) || { width: 0, height: 0 };
 
-        const x = nIndex * (width + columnGap);
+        const x = node.index * (width + columnGap);
         const y = flowAboveHeight + rowGap;
 
-        flowsHeight.set(flowId, flowAboveHeight + flowHeight + rowGap * 2);
-        positions[id] = { x, y };
+        flowsHeight.set(node.flowId, flowAboveHeight + flowHeight + rowGap * 2);
+        positions[node.id] = { x, y };
       });
     });
   };
