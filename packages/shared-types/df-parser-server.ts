@@ -7,80 +7,48 @@ export type NodeType = "global" | "local" | "regular";
  * Parsed form of plot, as received from the parser
  */
 export interface Plot {
-  imports: {
-    [id: string]: {
-      name: string;
-      code: string;
-      comment?: string;
+  directed: Boolean;
+  multigraph: Boolean;
+  graph: {
+    script: {
+      namespaces: {
+        main: {
+          script: {
+            [flowId: string]: {
+              [nodeId: string]: {
+                RESPONSE: string;
+                TRANSITIONS: {
+                  [transitionId: string]: string;
+                };
+                PROCESSING?: {
+                  [processingId: string]: string;
+                };
+                MISC?: {
+                  [miscId: string]: string;
+                };
+              };
+            };
+          };
+        };
+      };
     };
   };
-
-  py_defs: {
-    [id: string]: {
-      name: string;
-      code?: string;
-    };
-  };
-
-  plots: {
-    [id: string]: {
-      name: string;
-      flows: string[];
-    };
-  };
-
-  flows: {
-    [id: string]: {
-      name: string;
-      nodes: string[];
-    };
-  };
-
   nodes: {
-    [id: string]: {
-      type: NodeType;
-      name?: string;
-      transitions?: string[];
-      response?: string;
-      processing?: string;
-      misc?: string;
-    };
-  };
-
-  transitions: {
-    [id: string]: {
-      label: string;
-      priority?: number;
-      condition: string;
-    };
-  };
-
-  responses: {
-    [id: string]: {
-      response_object: string;
-    };
-  };
-
-  processings: {
-    [id: string]: {
-      items: Record<string, string>[];
-    };
-  };
-
-  miscs: {
-    [id: string]: {
-      items: Record<string, string>;
-    };
-  };
-
-  linking: {
-    [id: string]: {
-      object: string;
-      parent?: string;
-      args?: any;
-      kwargs?: Record<string, string | string[]>;
-    };
-  };
+    ref: string[];
+    local: Boolean;
+    id: string[];
+    start_label?: Boolean;
+    fallback_label?: Boolean;
+  }[];
+  links: {
+    label_ref: string[];
+    label: string;
+    condition_ref: string[];
+    condition: string[];
+    source: string[];
+    target: string[];
+    key: number;
+  }[];
 }
 
 // Message types passed to python from parent process
