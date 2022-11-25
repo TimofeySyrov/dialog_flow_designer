@@ -8,9 +8,8 @@ import newMockPlot from "../../__mocks__/mockPlot.json";
 import pick from "../../utils/helpers/pick";
 import { getLayout } from "../../utils/helpers/useLayout";
 import { plotToGraph } from "../../utils/helpers/usePlotToGraph";
-import useDrag from "../../utils/helpers/useDrag";
 import useStore, { applyViewTransforms, endJump, useGraph } from "../../store";
-import { Size, GraphRenderType } from "../../types";
+import { Size, GraphRenderType, GNode } from "../../types";
 import Edge, { updateEdgePosition } from "../Edge/Edge";
 import Block, { getBlockElement, updateBlockPosition } from "../Block/Block";
 import Flow, { updateFlowPosition } from "../Flow/Flow";
@@ -65,7 +64,7 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     return blocksWithSizes;
   };
 
-  const updateCanvas = (renderTypeState: GraphRenderType) => {
+  const updateCanvas = (renderTypeState: GraphRenderType, saveRematrix?: boolean) => {
     // Remove viewport transform for correct rerender without transform style context
     viewportRef.current!.style.transform = "";
     const blockSizes = getBlockSizes();
@@ -92,17 +91,22 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
       gridRef.current && (gridRef.current.style.display = "block");
     }
 
-    // Update matrix after updating all of positions
-    useStore.setState({
-      viewTransform: Rematrix.multiply(Rematrix.scale(0.25), Rematrix.translate(300, 50)),
-    });
+    if (!saveRematrix) {
+      // Update matrix after updating all of positions
+      useStore.setState({
+        viewTransform: Rematrix.multiply(Rematrix.scale(0.25), Rematrix.translate(300, 50)),
+      });
+    }
     viewportRef.current!.style.transform = Rematrix.toString(useStore.getState().viewTransform);
   };
 
   useEffect(() => {
     updateCanvas(renderType);
     // Rerender Canvas, when renderType is changed
-    useStore.subscribe((state) => state.renderType, updateCanvas);
+    useStore.subscribe(
+      (state) => state.renderType,
+      (renderType) => updateCanvas
+    );
 
     const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(true);
     const handleKeyUp = (ev: KeyboardEvent) => ev.key === "Control" && setCtrlHeld(false);
@@ -173,6 +177,48 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
     }
   };
 
+  const [activeNode, setActiveNode] = useState<GNode | null>(null);
+  const dragStartHandler = (e: React.DragEvent<HTMLElement>, n: GNode) => {
+    setActiveNode(n);
+  };
+
+  const dragEndHandler = (e: React.DragEvent<HTMLElement>) => {
+    e.currentTarget.style.boxShadow = "none";
+  };
+
+  const dragLeaveHandler = (e: React.DragEvent<HTMLElement>) => {
+    e.currentTarget.style.boxShadow = "none";
+  };
+
+  const dragOverHandler = (e: React.DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.currentTarget.style.boxShadow = "rgba(0, 0, 0, 0.35) 0px 5px 15px";
+  };
+
+  const dropHandler = (e: React.DragEvent<HTMLElement>, onDropNode: GNode) => {
+    e.preventDefault();
+    e.currentTarget.style.boxShadow = "none";
+    if (!activeNode) return;
+    const newOnDropNode = {
+      ...onDropNode,
+      ...{ flowId: activeNode.flowId, index: activeNode.index },
+    };
+    const newActiveNode = {
+      ...activeNode,
+      ...{ flowId: onDropNode.flowId, index: onDropNode.index },
+    };
+
+    const newGraph = graph;
+    newGraph.nodes = newGraph.nodes.map((n) => {
+      if (n.id === newOnDropNode.id) return newOnDropNode;
+      if (n.id === newActiveNode.id) return newActiveNode;
+      return n;
+    });
+
+    useStore.setState({ graph: newGraph });
+    updateCanvas(renderType, true);
+  };
+
   return (
     <div
       ref={canvasRef}
@@ -228,12 +274,20 @@ const Canvas: FC<{ zoomWithControl?: boolean }> = ({ zoomWithControl = true }) =
           ))}
         </svg>
         {graph.nodes.map((n) => {
-          const bRef = useRef(null);
-          const drag = useDrag({ ref: bRef });
           return (
-            <div ref={bRef} key={n.id} draggable>
-              <Block block={n} layoutPos={{ x: 0, y: 0 }} />
-            </div>
+            <Block
+              key={n.id}
+              block={n}
+              layoutPos={{ x: 0, y: 0 }}
+              props={{
+                draggable: true,
+                onDragStart: (e: React.DragEvent<HTMLElement>) => dragStartHandler(e, n),
+                onDrop: (e: React.DragEvent<HTMLElement>) => dropHandler(e, n),
+                onDragEnd: dragEndHandler,
+                onDragOver: dragOverHandler,
+                onDragLeave: dragLeaveHandler,
+              }}
+            />
           );
         })}
       </div>
